@@ -1,67 +1,154 @@
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Scramjet</title>
-		<link rel="icon" href="favicon.webp" />
-		<link
-			href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&amp;family=Inter+Tight:ital,wght@0,100..900;1,100..900&amp;family=Inter:wght@100..900&amp;display=swap&amp;"
-			rel="stylesheet"
-		/>
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&display=swap"
-			rel="stylesheet"
-		/>
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
-			rel="stylesheet"
-		/>
-		<style>
-			body,
-			html,
-			#app {
-				font-family:
-					"Inter",
-					system-ui,
-					-apple-system,
-					BlinkMacSystemFont,
-					sans-serif;
-				width: 100vw;
-				height: 100vh;
-				margin: 0;
-				padding: 0;
-				background-color: #050505;
-				overflow: hidden;
-			}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scramjet Browser</title>
+    
+    <script src="/baremux/bare.js" defer></script>
+    <script src="/epoxy/index.js" defer></script>
+    <script src="/scramjet/scramjet.controller.js" defer></script>
+    <script src="/scramjet/scramjet.conf.js" defer></script>
+    
+    <style>
+        /* --- UI STYLES (Same as before) --- */
+        :root {
+            --bg-color: #0d1117; --text-color: #c9d1d9; --bar-bg: #161b22;
+            --input-bg: #21262d; --input-text: #ffffff; --accent-color: #58a6ff;
+            --border-color: #30363d; --iframe-bg: #ffffff;
+        }
+        [data-theme="light"] {
+            --bg-color: #ffffff; --text-color: #1f2328; --bar-bg: #f6f8fa;
+            --input-bg: #eaeef2; --input-text: #050505; --accent-color: #0969da;
+            --border-color: #d0d7de; --iframe-bg: #ffffff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .browser-chrome { background-color: var(--bar-bg); padding: 12px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); }
+        .logo { font-weight: 800; color: var(--accent-color); letter-spacing: -0.5px; }
+        .tag { background: #238636; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; }
+        button { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); cursor: pointer; transition: 0.2s; }
+        button:hover { background: var(--border-color); }
+        .url-input-container { flex-grow: 1; display: flex; }
+        input[type="text"] { width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--input-text); outline: none; transition: 0.2s; }
+        input[type="text"]:focus { border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3); }
+        .viewport-container { flex-grow: 1; position: relative; background: var(--iframe-bg); }
+        iframe { width: 100%; height: 100%; border: none; display: block; }
+        .placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #555; text-align: center; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
 
-			@keyframes fade {
-				from {
-					opacity: 0;
-				}
-				to {
-					opacity: 1;
-				}
-			}
-		</style>
-		<script
-			defer
-			data-domain="scramjet.mercurywork.shop"
-			src="https://analytics.proudparrot2.com/js/script.js"
-		></script>
-		<script src="https://cdn.jsdelivr.net/npm/dreamland@0.0.25"></script>
-		<script src="/baremux/index.js"></script>
-		<script src="/scram/scramjet.all.js"></script>
-		<script src="config.js"></script>
-		<script src="store.js"></script>
-	</head>
+    <div class="browser-chrome">
+        <div class="logo">Scramjet <span class="tag">FAST</span></div>
+        <button id="btn-back" title="Back">←</button>
+        <button id="btn-refresh" title="Reload">↻</button>
+        <div class="url-input-container">
+            <input type="text" id="url-input" placeholder="Search or enter URL">
+        </div>
+        <button id="theme-btn">☀️</button>
+    </div>
 
-	<body>
-		<div id="app"></div>
-		<script src="ui.js"></script>
-	</body>
+    <div class="viewport-container">
+        <div id="placeholder-msg" class="placeholder">
+            <h2>Scramjet Engine Ready</h2>
+            <p>Initializing connection...</p>
+        </div>
+        <iframe id="content-frame" class="hidden" src=""></iframe>
+    </div>
+
+    <script>
+        // --- SCRAMJET INIT LOGIC ---
+        const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
+        let scramjet;
+
+        async function initScramjet() {
+            try {
+                // Load the controller from the global scope (provided by scramjet.controller.js)
+                // Note: The variable name usually provided by the script is $scramjetLoadController
+                if (typeof $scramjetLoadController === 'undefined') {
+                    throw new Error("Scramjet scripts not loaded. Check paths.");
+                }
+
+                const { ScramjetController } = $scramjetLoadController();
+                
+                scramjet = new ScramjetController({
+                    files: {
+                        wasm: "/scramjet/scramjet.wasm.wasm",
+                        worker: "/scramjet/scramjet.worker.js", 
+                        client: "/scramjet/scramjet.client.js",
+                        shared: "/scramjet/scramjet.shared.js",
+                        sync: "/scramjet/scramjet.sync.js",
+                    },
+                    // Standard config usually found in scramjet.conf.js or defaults
+                    config: self.__scramjet$config || {
+                        prefix: "/service/",
+                        encodeUrl: (str) => str, // Fallback if no encoder
+                        codec: { encode: (str) => str, decode: (str) => str } 
+                    }
+                });
+
+                await scramjet.init();
+                
+                // Set transport (Epoxy is standard for Scramjet)
+                let wispUrl = (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "/wisp/";
+                await connection.setTransport("/epoxy/index.mjs", [{ wisp: wispUrl }]);
+                
+                console.log("Scramjet Initialized!");
+                document.querySelector('#placeholder-msg p').textContent = "Enter a URL to browse.";
+            
+            } catch (e) {
+                console.error(e);
+                document.querySelector('#placeholder-msg p').textContent = "Error: " + e.message;
+            }
+        }
+        
+        // Start initialization immediately
+        initScramjet();
+
+        // --- BROWSER UI LOGIC ---
+        const urlInput = document.getElementById('url-input');
+        const contentFrame = document.getElementById('content-frame');
+        const placeholder = document.getElementById('placeholder-msg');
+
+        async function navigate(query) {
+            if (!query || !scramjet) return;
+
+            let url = query.trim();
+            if (!url.includes('.') || url.includes(' ')) {
+                url = 'https://www.google.com/search?q=' + encodeURIComponent(url);
+            } else if (!url.startsWith('http')) {
+                url = 'https://' + url;
+            }
+
+            placeholder.classList.add('hidden');
+            contentFrame.classList.remove('hidden');
+
+            // Encode the URL using Scramjet's encoder
+            const encodedUrl = scramjet.encodeUrl(url);
+            contentFrame.src = encodedUrl;
+        }
+
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') navigate(urlInput.value);
+        });
+
+        // Frame Controls
+        document.getElementById('btn-back').addEventListener('click', () => {
+            try { contentFrame.contentWindow.history.back(); } catch(e){}
+        });
+        document.getElementById('btn-refresh').addEventListener('click', () => {
+            contentFrame.src = contentFrame.src;
+        });
+
+        // Theme Toggle
+        let isDark = true;
+        document.getElementById('theme-btn').addEventListener('click', function() {
+            isDark = !isDark;
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            this.textContent = isDark ? '☀️' : '🌙';
+        });
+    </script>
+</body>
 </html>
